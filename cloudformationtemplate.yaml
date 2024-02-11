@@ -1,8 +1,8 @@
 Parameters:
   GitHubAccessToken:
-    Type: 'AWS::SSM::Parameter::GITHUB_ACCESS_TOKEN'
+    Type: 'AWS::SSM::Parameter::Value<String>'
     Description: Name of parameter with GitHub access token
-    Default: codebuild-github-token
+    Default: GITHUB_ACCESS_TOKEN
     NoEcho: true
 Resources:
   CodeBuildCredentials:
@@ -24,8 +24,17 @@ Resources:
   CodeBuildProject:
     Type: 'AWS::CodeBuild::Project'
     Properties:
+      Source: 
+        Type: GITHUB
+        Location: 'https://github.com/Ashwin7p/Github_AWS_Repository.git'
+        BuildSpec: buildspec.yaml
+        Auth:
+            Type: OAUTH
+            Resource: !Ref CodeBuildCredentials
       Triggers:
         Webhook: true
+        Artifacts:
+            Type: NO_ARTIFACTS
         FilterGroups:
           - - Type: EVENT
               Pattern: 'PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED'
@@ -33,4 +42,4 @@ Resources:
               Pattern: !Sub ^refs/heads/main$
               ExcludeMatchedPattern: false
       Name: !Ref 'AWS::StackName'
-      ServiceRole: !Ref CodeBuildServiceRole
+      ServiceRole: !GetAtt CodeBuildServiceRole.arn
