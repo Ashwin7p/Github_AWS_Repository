@@ -1,0 +1,36 @@
+Parameters:
+  GitHubAccessToken:
+    Type: 'AWS::SSM::Parameter::GITHUB_ACCESS_TOKEN'
+    Description: Name of parameter with GitHub access token
+    Default: codebuild-github-token
+    NoEcho: true
+Resources:
+  CodeBuildCredentials:
+    Type: 'AWS::CodeBuild::SourceCredential'
+    Properties:
+      ServerType: GITHUB
+      AuthType: PERSONAL_ACCESS_TOKEN
+      Token: !Ref GitHubAccessToken
+  CodeBuildServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2010-09-09
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: 'sts:AssumeRole'
+  CodeBuildProject:
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: 'PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED'
+            - Type: BASE_REF
+              Pattern: !Sub ^refs/heads/main$
+              ExcludeMatchedPattern: false
+      Name: !Ref 'AWS::StackName'
+      ServiceRole: !Ref CodeBuildServiceRole
