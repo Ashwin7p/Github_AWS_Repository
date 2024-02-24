@@ -1,11 +1,20 @@
+Parameters:
+  GitHubOwner:
+    Type: String
+    AllowedPattern: '[A-Za-z0-9-]+'
+  GitHubRepository:
+    Type: String
+    AllowedPattern: '[A-Za-z0-9-]+'
+  GitHubBranch:
+    Type: String
+    AllowedPattern: '[A-Za-z0-9-]+'
 Resources:
   CodeBuildCredentials:
     Type: 'AWS::CodeBuild::SourceCredential'
     Properties:
       ServerType: GITHUB
       AuthType: PERSONAL_ACCESS_TOKEN
-      Token: "{{resolve:secretmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}"
-  
+      Token: '{{resolve:secretmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}'
   CodeBuildServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -50,7 +59,6 @@ Resources:
                 Action:
                   - 'ssm:GetParameter'
                 Resource: '*'
-  
   CodeBuildProject:
     Type: 'AWS::CodeBuild::Project'
     Properties:
@@ -58,7 +66,7 @@ Resources:
         Type: NO_ARTIFACTS
       Source:
         Type: GITHUB
-        Location: 'https://github.com/Ashwin7p/Github_AWS_Repository.git'
+        Location: !Sub 'https://github.com/${GitHubOwner}/${GitHubRepository}.git'
         BuildSpec: buildspec.yaml
         Auth:
           Type: OAUTH
@@ -66,7 +74,7 @@ Resources:
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/standard:5.0
+        Image: 'aws/codebuild/standard:5.0'
       Name: !Ref 'AWS::StackName'
       ServiceRole: !GetAtt 
         - CodeBuildServiceRole
