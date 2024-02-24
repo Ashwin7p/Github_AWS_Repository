@@ -1,16 +1,10 @@
-Parameters:
-  GitHubAccessToken:
-    Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: Name of parameter with GitHub access token
-    Default: GITHUB_ACCESS_TOKEN
-    NoEcho: true
 Resources:
   CodeBuildCredentials:
     Type: 'AWS::CodeBuild::SourceCredential'
     Properties:
       ServerType: GITHUB
       AuthType: PERSONAL_ACCESS_TOKEN
-      Token: !Ref GitHubAccessToken
+      Token: "{{resolve:secretmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}"
   CodeBuildServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
