@@ -4,10 +4,11 @@ Parameters:
     AllowedPattern: '[A-Za-z0-9-]+'
   GitHubRepository:
     Type: String
-    AllowedPattern: '[A-Za-z0-9-]+'
+    AllowedPattern: '[A-Za-z0-9_-]+'
   GitHubBranch:
     Type: String
     AllowedPattern: '[A-Za-z0-9-]+'
+
 Resources:
   CodeBuildCredentials:
     Type: 'AWS::CodeBuild::SourceCredential'
@@ -15,6 +16,7 @@ Resources:
       ServerType: GITHUB
       AuthType: PERSONAL_ACCESS_TOKEN
       Token: '{{resolve:secretmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}'
+
   CodeBuildServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -59,6 +61,7 @@ Resources:
                 Action:
                   - 'ssm:GetParameter'
                 Resource: '*'
+
   CodeBuildProject:
     Type: 'AWS::CodeBuild::Project'
     Properties:
@@ -71,10 +74,18 @@ Resources:
         Auth:
           Type: OAUTH
           Resource: !Ref CodeBuildCredentials
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: 'PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED'
+            - Type: BASE_REF
+              Pattern: !Sub ^refs/heads/main$
+              ExcludeMatchedPattern: false
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: 'aws/codebuild/standard:5.0'
+        Image: aws/codebuild/standard:5.0
       Name: !Ref 'AWS::StackName'
       ServiceRole: !GetAtt 
         - CodeBuildServiceRole
