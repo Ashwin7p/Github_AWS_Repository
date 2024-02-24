@@ -50,6 +50,11 @@ Resources:
                   - 's3:GetBucketAcl'
                   - 's3:GetBucketLocation'
                 Resource: '*'
+              - Sid: SSMParameterAccess
+                Effect: Allow
+                Action:
+                  - 'ssm:GetParameter'
+                Resource: '*'
   CodeBuildProject:
     Type: 'AWS::CodeBuild::Project'
     Properties:
